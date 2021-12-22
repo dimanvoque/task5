@@ -1,0 +1,33 @@
+version: "2.4"
+services:
+  db:
+    hostname: db
+    image: mysql:5.6
+    container_name: db_container
+    ports:
+      - 3306:3306
+    volumes:
+      - ./scripts:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: dostavim
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+  app:
+    container_name: app
+    ports:
+      - 8080:8080
+    build:
+      context: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - spring.datasource.driverClassName=com.mysql.jdbc.Driver
+      - spring.datasource.url=jdbc:mysql://db:3306/dostavim?useSSL=false
+      - spring.datasource.username=root
+      - spring.datasource.password=admin
